@@ -1,5 +1,8 @@
-package com.example.chatik.api
+package com.example.chatik.api.request
 
+import com.example.chatik.api.model.SearchRequest
+import com.example.chatik.api.model.SearchResponse
+import com.example.chatik.api.model.UserInfoResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST

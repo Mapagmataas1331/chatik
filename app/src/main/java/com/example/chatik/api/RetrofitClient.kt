@@ -1,5 +1,8 @@
 package com.example.chatik.api
 
+import com.example.chatik.api.request.AuthService
+import com.example.chatik.api.request.MessageService
+import com.example.chatik.api.request.UserService
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 

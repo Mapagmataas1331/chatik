@@ -1,5 +1,9 @@
-package com.example.chatik.api
+package com.example.chatik.api.request
 
+import com.example.chatik.api.model.LoginRequest
+import com.example.chatik.api.model.LoginResponse
+import com.example.chatik.api.model.RegistrationRequest
+import com.example.chatik.api.model.RegistrationResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
 
