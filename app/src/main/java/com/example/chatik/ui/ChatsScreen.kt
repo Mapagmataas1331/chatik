@@ -63,7 +63,11 @@ fun LoadChats(
       }
       Log.d("TAG----------------", response.searchUsers.toString())
       chats.clear()
+      var chatsNumber = 0
       for (user in response.searchUsers) {
+        if (chatsNumber >= 10) {
+          break
+        }
         val userMessageRequest = UserMessageRequest(currentUserID, user.id)
         val messages: MessagesList = withContext(Dispatchers.IO) {
           RetrofitClient.createMessageService().getUserMessages(userMessageRequest)
@@ -74,9 +78,12 @@ fun LoadChats(
           val lastMessage = messages.messagesList.last()
           val messageText = "${lastMessage.from.username}: ${lastMessage.message}"
           chats.add(messageText)
+          chatsNumber++
         } else {
           Log.d("TAG----------------", "false")
+          Log.d("TAG----------------", user.username.toString())
           chats.add(user.username)
+          chatsNumber++
         }
       }
     } catch (e: Exception) {
@@ -84,6 +91,7 @@ fun LoadChats(
       // Handle error
     }
   }
+  Log.d("TAG----------------", "chats")
   DisplayChats(chats, onChatClicked)
 }
 
