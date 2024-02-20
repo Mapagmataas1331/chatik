@@ -1,102 +1,87 @@
 package com.example.chatik.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.example.chatik.api.model.Message
-import com.example.chatik.api.model.User
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-  messages: List<Message>,
-  onChatItemClick: (User) -> Unit
+  friendUsername: String,
+  onBackClicked: () -> Unit
 ) {
-  // Group messages by sender or receiver to simulate chats
-  val chats = messages.groupBy { if (it.from.id == currentUser.id) it.to else it.from }
-    .map { (user, messages) ->
-      Chat(user, messages.lastOrNull()?.message ?: "")
-    }
+  val messages = remember { mutableStateListOf<String>() }
+  var newMessageText by remember { mutableStateOf("") }
 
-  Column(
-    modifier = Modifier.fillMaxSize(),
-    verticalArrangement = Arrangement.Top
-  ) {
-    Spacer(modifier = Modifier.height(16.dp))
-    ChatList(chats = chats, onChatItemClick = onChatItemClick)
+  Column(modifier = Modifier.fillMaxSize()) {
+    TopAppBar(
+      title = { Text(text = friendUsername) },
+      navigationIcon = {
+        IconButton(onClick = onBackClicked) {
+          Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+        }
+      }
+    )
+    MessagesList(messages)
+    MessageInput(
+      message = newMessageText,
+      onMessageChange = { newMessageText = it },
+      onSend = {
+        messages.add(it)
+        // Logic for sending message to the friend
+        newMessageText = ""
+      }
+    )
   }
 }
 
 @Composable
-fun ChatList(
-  messages: List<Message>,
-  onChatItemClick: (User) -> Unit
-) {
+fun MessagesList(messages: List<String>) {
   LazyColumn {
     items(messages) { message ->
-      ChatItem(chat = chat, onItemClick = { onChatItemClick(message.id) })
-      Divider()
+      Text(text = message)
     }
   }
 }
 
 @Composable
-fun ChatItem(
-  chat: Chat,
-  onItemClick: () -> Unit
+fun MessageInput(
+  message: String,
+  onMessageChange: (String) -> Unit,
+  onSend: (String) -> Unit
 ) {
-  Column(
-    modifier = Modifier.clickable { onItemClick() }.padding(16.dp)
+  Row(
+    modifier = Modifier.fillMaxWidth(),
+    verticalAlignment = Alignment.CenterVertically
   ) {
-    Text(text = chat.user.username)
-    Text(text = chat.lastMessage)
-  }
-}
-
-@Composable
-fun SearchBar(
-  userService: UserService,
-  onSearchResult: (List<User>) -> Unit
-) {
-  var searchQuery by remember { mutableStateOf("") }
-
-  Column(
-    modifier = Modifier.fillMaxWidth()
-  ) {
-    OutlinedTextField(
-      value = searchQuery,
-      onValueChange = { searchQuery = it },
-      modifier = Modifier.fillMaxWidth(),
-      label = { Text("Search users by username") }
+    TextField(
+      value = message,
+      onValueChange = { onMessageChange(it) },
+      modifier = Modifier.weight(1f),
+      placeholder = { Text("Type a message...") }
     )
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    Button(
-      onClick = {
-        // Perform search operation
-        if (searchQuery.isNotEmpty()) {
-          GlobalScope.launch(Dispatchers.Main) {
-            try {
-              val searchResponse = userService.searchUsers(SearchRequest(searchQuery))
-              onSearchResult(searchResponse.searchUsers)
-            } catch (e: Exception) {
-              // Handle error
-              Log.e("Search", "Error: ${e.message}", e)
-            }
-          }
-        }
-      },
-      modifier = Modifier.align(Alignment.CenterHorizontally)
-    ) {
-      Text("Search")
+    Button(onClick = { onSend(message) }) {
+      Text("Send")
     }
   }
 }

@@ -1,64 +1,54 @@
 package com.example.chatik.ui
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import com.example.chatik.api.RetrofitClient
-import com.example.chatik.api.model.User
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 
-class MainActivity : AppCompatActivity() {
-  private val authService = RetrofitClient.createAuthService()
-
+class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      MaterialTheme {
-        Surface {
-          LoginScreen(authService,
-            { navigateToRegistration() },
-            { navigateToChats() },
-          )
-        }
-      }
+      ChatikApp()
     }
   }
+}
 
-  private fun navigateToRegistration() {
-    setContent {
-      MaterialTheme {
-        Surface {
-          RegistrationScreen(authService,
-            { navigateToLogin() },
-            { navigateToChats() },
-          )
-        }
-      }
-    }
-  }
+@Composable
+fun ChatikApp() {
+  var currentScreen by rememberSaveable { mutableStateOf(Screen.Login) }
 
-  private fun navigateToLogin() {
-    setContent {
-      MaterialTheme {
-        Surface {
-          RegistrationScreen(authService,
-            { navigateToRegistration() },
-            { navigateToChats() },
-          )
-        }
+  when (currentScreen) {
+    Screen.Login -> LoginScreen(
+      onLoginSuccess = {
+        currentScreen = Screen.Chats
+      },
+      onRegisterClicked = {
+        currentScreen = Screen.Registration
       }
-    }
-  }
+    )
+    Screen.Registration -> RegistrationScreen(
+      onLoginClicked = {
+        currentScreen = Screen.Login
+      }
+    )
+    Screen.Chats -> ChatsScreen(
+      onChatClicked = { friendUsername ->
+        // Navigate to chat screen with friendUsername
+      }
+    )
 
-  private fun navigateToChats(User: User) {
-    setContent {
-      MaterialTheme {
-        Surface {
-          ChatScreen(getLastMessages())
-        }
-      }
-    }
+    else -> {}
   }
+}
+
+enum class Screen {
+  Login,
+  Registration,
+  Chats,
+  Chat
 }

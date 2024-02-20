@@ -1,90 +1,62 @@
 package com.example.chatik.ui
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.Button
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.chatik.api.model.LoginRequest
-import com.example.chatik.api.request.AuthService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-  authService: AuthService,
-  navigateToRegistration: () -> Unit,
-  navigateToChat: () -> Unit
+  onLoginSuccess: () -> Unit,
+  onRegisterClicked: () -> Unit
 ) {
   var username by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
-  var isLoading by remember { mutableStateOf(false) }
-  var error by remember { mutableStateOf("") }
 
   Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .padding(16.dp),
-    verticalArrangement = Arrangement.spacedBy(8.dp),
+    modifier = Modifier.fillMaxSize(),
+    verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
     TextField(
       value = username,
       onValueChange = { username = it },
-      modifier = Modifier.fillMaxWidth(),
       label = { Text("Username") }
     )
+    Spacer(modifier = Modifier.height(16.dp))
     TextField(
       value = password,
       onValueChange = { password = it },
-      modifier = Modifier.fillMaxWidth(),
-      label = { Text("Password") }
+      label = { Text("Password") },
+      visualTransformation = PasswordVisualTransformation(),
+      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
     )
-    if (isLoading) {
-      CircularProgressIndicator()
-    } else {
-      Button(
-        onClick = {
-          isLoading = true
-          GlobalScope.launch(Dispatchers.Main) {
-            try {
-              val response = authService.loginUser(LoginRequest(username, password))
-              if (response.id != 0) {
-                navigateToChat()
-              } else {
-                error = "Invalid username or password"
-              }
-            } catch (e: Exception) {
-              error = "An error occurred"
-            } finally {
-              isLoading = false
-            }
-          }
-        },
-        modifier = Modifier.align(Alignment.CenterHorizontally)
-      ) {
-        Text("Login")
-      }
-      Button(
-        onClick = navigateToRegistration,
-        modifier = Modifier.align(Alignment.CenterHorizontally)
-      ) {
-        Text("Register")
-      }
+    Spacer(modifier = Modifier.height(16.dp))
+    Button(onClick = {
+      // Perform login logic here
+      onLoginSuccess()
+    }) {
+      Text("Login")
     }
-    if (error.isNotBlank()) {
-      Text(text = error, color = Color.Red)
+    Spacer(modifier = Modifier.height(16.dp))
+    TextButton(onClick = onRegisterClicked) {
+      Text("Register")
     }
   }
 }
-
