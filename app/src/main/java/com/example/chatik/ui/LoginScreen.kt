@@ -24,7 +24,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.chatik.api.RetrofitClient
 import com.example.chatik.api.model.LoginRequest
-import com.example.chatik.api.model.UserID
+import com.example.chatik.api.model.Id
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,7 +33,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun LoginScreen(
   context: Context,
-  onLoginSuccess: () -> Unit,
+  onLoginSuccess: (Int) -> Unit,
   onRegisterClicked: () -> Unit
 ) {
   var username by remember { mutableStateOf("") }
@@ -60,9 +60,9 @@ fun LoginScreen(
     Spacer(modifier = Modifier.height(16.dp))
     Button(onClick = {
       // Perform login logic here
-      loginUser(context, username, password) { success ->
-        if (success) {
-          onLoginSuccess()
+      loginUser(context, username, password) { userId: Int ->
+        if (userId >= 0) {
+          onLoginSuccess(userId)
         } else {
           Toast.makeText(
             context,
@@ -81,17 +81,17 @@ fun LoginScreen(
   }
 }
 
-private fun loginUser(context: Context, username: String, password: String, callback: (Boolean) -> Unit) {
+private fun loginUser(context: Context, username: String, password: String, callback: (Int) -> Unit) {
   val authService = RetrofitClient.createAuthService()
   CoroutineScope(Dispatchers.IO).launch {
     try {
-      val response: UserID = authService.loginUser(LoginRequest(username, password))
+      val response: Id = authService.loginUser(LoginRequest(username, password))
       val success = response.id >= 0
       withContext(Dispatchers.Main) {
         if (success) {
-          callback(true)
+          callback(response.id)
         } else {
-          callback(false)
+          callback(-1)
           Toast.makeText(
             context,
             "Login failed. Please try again.",
@@ -102,7 +102,7 @@ private fun loginUser(context: Context, username: String, password: String, call
     } catch (e: Exception) {
       e.printStackTrace()
       withContext(Dispatchers.Main) {
-        callback(false)
+        callback(-1)
         Toast.makeText(
           context,
           "Login failed. Please try again.",

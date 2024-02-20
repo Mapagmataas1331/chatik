@@ -19,17 +19,21 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ChatikApp(context: Context) {
   var currentScreen by rememberSaveable { mutableStateOf(Screen.Login) }
+  var currentUserID by remember { mutableStateOf(-1) }
+
+  val onLoginSuccess: (Int) -> Unit = { userId ->
+    currentUserID = userId
+    currentScreen = Screen.Chats
+  }
 
   when (currentScreen) {
     Screen.Login -> LoginScreen(
       context = context,
-      onLoginSuccess = {
-        currentScreen = Screen.Chats
-      },
-      onRegisterClicked = {
-        currentScreen = Screen.Registration
-      }
-    )
+      onLoginSuccess = onLoginSuccess
+    ) {
+      currentScreen = Screen.Registration
+    }
+
     Screen.Registration -> RegistrationScreen(
       context = context,
       onLoginClicked = {
@@ -38,6 +42,7 @@ fun ChatikApp(context: Context) {
     )
     Screen.Chats -> ChatsScreen(
       context = context,
+      currentUserID = currentUserID, // Pass currentUserID
       onChatClicked = { friendUsername ->
         // Navigate to chat screen with friendUsername
       }

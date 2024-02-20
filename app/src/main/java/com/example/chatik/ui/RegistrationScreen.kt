@@ -23,9 +23,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.chatik.api.RetrofitClient
-import com.example.chatik.api.model.LoginRequest
 import com.example.chatik.api.model.RegistrationRequest
-import com.example.chatik.api.model.UserID
+import com.example.chatik.api.model.Id
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -104,7 +103,7 @@ private fun registerUser(context: Context, username: String, password: String, f
   val authService = RetrofitClient.createAuthService()
   CoroutineScope(Dispatchers.IO).launch {
     try {
-      val response: UserID = authService.registerUser(RegistrationRequest(username, password, firstName, lastName))
+      val response: Id = authService.registerUser(RegistrationRequest(username, password, firstName, lastName))
       val success = response.id >= 0
       withContext(Dispatchers.Main) {
         if (success) {

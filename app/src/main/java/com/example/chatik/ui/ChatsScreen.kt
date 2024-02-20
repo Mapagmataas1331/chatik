@@ -1,6 +1,7 @@
 package com.example.chatik.ui
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.chatik.api.RetrofitClient
+import com.example.chatik.api.model.MessagesList
+import com.example.chatik.api.model.SearchString
+import com.example.chatik.api.model.SearchUsers
 import com.example.chatik.api.model.UserMessageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -24,6 +28,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ChatsScreen(
   context: Context,
+  currentUserID: Int,
   onChatClicked: (String) -> Unit
 ) {
   val chats = remember { mutableStateListOf<String>() }
@@ -38,7 +43,7 @@ fun ChatsScreen(
       onActiveChange = {},
       content = {}
     )
-    LoadChats(context, chats, searchText, onChatClicked)
+    LoadChats(context, chats, currentUserID, searchText, onChatClicked)
   }
 }
 
@@ -46,25 +51,32 @@ fun ChatsScreen(
 fun LoadChats(
   context: Context,
   chats: MutableList<String>,
+  currentUserID: Int, // Receive the current user ID
   searchText: String,
   onChatClicked: (String) -> Unit
 ) {
-  val userService = remember { RetrofitClient.createUserService() }
-  val currentUser = remember { /* Obtain the current user */ 0 } // Replace 0 with the current user ID
-
   LaunchedEffect(searchText) {
     try {
-      val users = withContext(Dispatchers.IO) { userService.searchUsers(searchText) }
+      val searchString = SearchString(searchText)
+      val response: SearchUsers = withContext(Dispatchers.IO) {
+        RetrofitClient.createUserService().searchUsers(searchString)
+      }
+      Log.d("TAG----------------", response.searchUsers.toString())
       chats.clear()
-      for (user in users) {
-        val userMessageRequest = UserMessageRequest(currentUser, user.id)
-        val messages = withContext(Dispatchers.IO) {
+      for (user in response.searchUsers) {
+        val userMessageRequest = UserMessageRequest(currentUserID, user.id)
+        val messages: MessagesList = withContext(Dispatchers.IO) {
           RetrofitClient.createMessageService().getUserMessages(userMessageRequest)
         }
-        if (messages.isNotEmpty()) {
-          val lastMessage = messages.last()
+        Log.d("TAG----------------", messages.messagesList.toString())
+        if (messages.messagesList.isNotEmpty()) {
+          Log.d("TAG----------------", "true")
+          val lastMessage = messages.messagesList.last()
           val messageText = "${lastMessage.from.username}: ${lastMessage.message}"
           chats.add(messageText)
+        } else {
+          Log.d("TAG----------------", "false")
+          chats.add(user.username)
         }
       }
     } catch (e: Exception) {
