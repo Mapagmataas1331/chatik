@@ -1,29 +1,28 @@
 package com.example.chatik.ui
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      ChatikApp()
+      ChatikApp(this)
     }
   }
 }
 
 @Composable
-fun ChatikApp() {
+fun ChatikApp(context: Context) {
   var currentScreen by rememberSaveable { mutableStateOf(Screen.Login) }
 
   when (currentScreen) {
     Screen.Login -> LoginScreen(
+      context = context,
       onLoginSuccess = {
         currentScreen = Screen.Chats
       },
@@ -32,16 +31,17 @@ fun ChatikApp() {
       }
     )
     Screen.Registration -> RegistrationScreen(
+      context = context,
       onLoginClicked = {
         currentScreen = Screen.Login
       }
     )
     Screen.Chats -> ChatsScreen(
+      context = context,
       onChatClicked = { friendUsername ->
         // Navigate to chat screen with friendUsername
       }
     )
-
     else -> {}
   }
 }

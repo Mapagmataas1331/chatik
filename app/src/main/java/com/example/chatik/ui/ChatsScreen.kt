@@ -1,54 +1,90 @@
 package com.example.chatik.ui
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.example.chatik.api.RetrofitClient
+import com.example.chatik.api.model.UserMessageRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatsScreen(onChatClicked: (String) -> Unit) {
+fun ChatsScreen(
+  context: Context,
+  onChatClicked: (String) -> Unit
+) {
   val chats = remember { mutableStateListOf<String>() }
   var searchText by remember { mutableStateOf("") }
 
   Column(modifier = Modifier.fillMaxSize()) {
-    SearchBar(searchText) { searchText = it }
-    ChatsList(chats, onChatClicked)
+    SearchBar(
+      query = searchText,
+      onQueryChange = { searchText = it },
+      onSearch = {},
+      active = true,
+      onActiveChange = {},
+      content = {}
+    )
+    LoadChats(context, chats, searchText, onChatClicked)
   }
 }
 
 @Composable
-fun SearchBar(searchText: String, onSearchTextChanged: (String) -> Unit) {
-  TextField(
-    value = searchText,
-    onValueChange = onSearchTextChanged,
-    modifier = Modifier.fillMaxWidth(),
-    placeholder = { Text("Search...") }
-  )
+fun LoadChats(
+  context: Context,
+  chats: MutableList<String>,
+  searchText: String,
+  onChatClicked: (String) -> Unit
+) {
+  val userService = remember { RetrofitClient.createUserService() }
+  val currentUser = remember { /* Obtain the current user */ 0 } // Replace 0 with the current user ID
+
+  LaunchedEffect(searchText) {
+    try {
+      val users = withContext(Dispatchers.IO) { userService.searchUsers(searchText) }
+      chats.clear()
+      for (user in users) {
+        val userMessageRequest = UserMessageRequest(currentUser, user.id)
+        val messages = withContext(Dispatchers.IO) {
+          RetrofitClient.createMessageService().getUserMessages(userMessageRequest)
+        }
+        if (messages.isNotEmpty()) {
+          val lastMessage = messages.last()
+          val messageText = "${lastMessage.from.username}: ${lastMessage.message}"
+          chats.add(messageText)
+        }
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      // Handle error
+    }
+  }
+  DisplayChats(chats, onChatClicked)
 }
 
 @Composable
-fun ChatsList(chats: List<String>, onChatClicked: (String) -> Unit) {
-  LazyColumn {
-    items(chats) { chat ->
+fun DisplayChats(
+  chats: List<String>,
+  onChatClicked: (String) -> Unit
+) {
+  Column {
+    chats.forEach { chat ->
       Text(
         text = chat,
-        modifier = Modifier
-          .fillMaxWidth()
-          .clickable { onChatClicked(chat) }
-          .padding(16.dp)
+        modifier = Modifier.clickable { onChatClicked(chat) }
       )
     }
   }

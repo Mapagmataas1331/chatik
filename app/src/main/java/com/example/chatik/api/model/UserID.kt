@@ -4,6 +4,6 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class SearchResponse(
-  @Json(name = "search_users") val searchUsers: List<User>
+data class UserID(
+  @Json(name = "id") val id: Int
 )
