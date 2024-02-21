@@ -41,9 +41,8 @@ fun ChatsScreen(
       onSearch = {},
       active = true,
       onActiveChange = {},
-      content = {}
+      content = { LoadChats(context, chats, currentUserID, searchText, onChatClicked) }
     )
-    LoadChats(context, chats, currentUserID, searchText, onChatClicked)
   }
 }
 
@@ -51,7 +50,7 @@ fun ChatsScreen(
 fun LoadChats(
   context: Context,
   chats: MutableList<String>,
-  currentUserID: Int, // Receive the current user ID
+  currentUserID: Int,
   searchText: String,
   onChatClicked: (String) -> Unit
 ) {
@@ -61,29 +60,24 @@ fun LoadChats(
       val response: SearchUsers = withContext(Dispatchers.IO) {
         RetrofitClient.createUserService().searchUsers(searchString)
       }
-      Log.d("TAG----------------", response.searchUsers.toString())
       chats.clear()
-      var chatsNumber = 0
+//      var chatsNumber = 0
       for (user in response.searchUsers) {
-        if (chatsNumber >= 10) {
-          break
-        }
+//        if (chatsNumber >= 10) {
+//          break
+//        }
         val userMessageRequest = UserMessageRequest(currentUserID, user.id)
         val messages: MessagesList = withContext(Dispatchers.IO) {
           RetrofitClient.createMessageService().getUserMessages(userMessageRequest)
         }
-        Log.d("TAG----------------", messages.messagesList.toString())
         if (messages.messagesList.isNotEmpty()) {
-          Log.d("TAG----------------", "true")
           val lastMessage = messages.messagesList.last()
           val messageText = "${lastMessage.from.username}: ${lastMessage.message}"
           chats.add(messageText)
-          chatsNumber++
+//          chatsNumber++
         } else {
-          Log.d("TAG----------------", "false")
-          Log.d("TAG----------------", user.username.toString())
           chats.add(user.username)
-          chatsNumber++
+//          chatsNumber++
         }
       }
     } catch (e: Exception) {
@@ -91,7 +85,6 @@ fun LoadChats(
       // Handle error
     }
   }
-  Log.d("TAG----------------", "chats")
   DisplayChats(chats, onChatClicked)
 }
 
