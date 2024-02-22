@@ -1,11 +1,15 @@
 package com.example.chatik.ui
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,8 +18,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.example.chatik.api.RetrofitClient
 import com.example.chatik.api.model.MessagesList
 import com.example.chatik.api.model.SearchString
@@ -61,24 +67,18 @@ fun LoadChats(
         RetrofitClient.createUserService().searchUsers(searchString)
       }
       chats.clear()
-//      var chatsNumber = 0
       for (user in response.searchUsers) {
-//        if (chatsNumber >= 10) {
-//          break
-//        }
         val userMessageRequest = UserMessageRequest(currentUserID, user.id)
         val messages: MessagesList = withContext(Dispatchers.IO) {
           RetrofitClient.createMessageService().getUserMessages(userMessageRequest)
         }
-        if (messages.messagesList.isNotEmpty()) {
+        val chatText = if (messages.messagesList.isNotEmpty()) {
           val lastMessage = messages.messagesList.last()
-          val messageText = "${lastMessage.from.username}: ${lastMessage.message}"
-          chats.add(messageText)
-//          chatsNumber++
+          "${lastMessage.from.username}: ${lastMessage.message}"
         } else {
-          chats.add(user.username)
-//          chatsNumber++
+          "No message history"
         }
+        chats.add("${user.username}#${user.id}\n$chatText")
       }
     } catch (e: Exception) {
       e.printStackTrace()
@@ -93,12 +93,12 @@ fun DisplayChats(
   chats: List<String>,
   onChatClicked: (String) -> Unit
 ) {
-  Column {
-    chats.forEach { chat ->
-      Text(
-        text = chat,
-        modifier = Modifier.clickable { onChatClicked(chat) }
-      )
+  LazyColumn {
+    items(chats) { chat ->
+      Column(modifier = Modifier.fillMaxWidth().clickable { onChatClicked(chat.split("#")[0]) }) {
+        Text(text = chat)
+        HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+      }
     }
   }
 }
