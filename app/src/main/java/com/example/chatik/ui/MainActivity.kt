@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.chatik.api.model.Auth
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,11 +20,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ChatikApp(context: Context) {
   var currentScreen by rememberSaveable { mutableStateOf(Screen.Login) }
-  var currentUserID by remember { mutableIntStateOf(-1) }
+  var currentUserAuth by remember { mutableStateOf(Auth(id = -1, username = "", password = "")) }
   var currentFriendUsername by remember { mutableStateOf("") }
 
-  val onLoginSuccess: (Int) -> Unit = { userId ->
-    currentUserID = userId
+  val onLoginSuccess: (Auth) -> Unit = { userAuth ->
+    currentUserAuth = userAuth
     currentScreen = Screen.Chats
   }
 
@@ -49,13 +50,13 @@ fun ChatikApp(context: Context) {
 
     Screen.Chats -> ChatsScreen(
       context = context,
-      currentUserID = currentUserID,
+      userAuth = currentUserAuth,
       onChatClicked = onChatClicked
     )
 
     Screen.Chat -> ChatScreen(
       friendUsername = currentFriendUsername,
-      currentUserID = currentUserID,
+      userAuth = currentUserAuth,
       onBackClicked = {
         currentScreen = Screen.Chats
       }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.SearchBar
@@ -23,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.chatik.api.RetrofitClient
+import com.example.chatik.api.model.Auth
 import com.example.chatik.api.model.MessagesList
 import com.example.chatik.api.model.SearchString
 import com.example.chatik.api.model.SearchUsers
@@ -34,7 +34,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ChatsScreen(
   context: Context,
-  currentUserID: Int,
+  userAuth: Auth,
   onChatClicked: (String) -> Unit
 ) {
   val chats = remember { mutableStateListOf<String>() }
@@ -47,7 +47,7 @@ fun ChatsScreen(
       onSearch = {},
       active = true,
       onActiveChange = {},
-      content = { LoadChats(context, chats, currentUserID, searchText, onChatClicked) }
+      content = { LoadChats(context, chats, userAuth, searchText, onChatClicked) }
     )
   }
 }
@@ -56,7 +56,7 @@ fun ChatsScreen(
 fun LoadChats(
   context: Context,
   chats: MutableList<String>,
-  currentUserID: Int,
+  userAuth: Auth,
   searchText: String,
   onChatClicked: (String) -> Unit
 ) {
@@ -68,7 +68,7 @@ fun LoadChats(
       }
       chats.clear()
       for (user in response.searchUsers) {
-        val userMessageRequest = UserMessageRequest(currentUserID, user.id)
+        val userMessageRequest = UserMessageRequest(userAuth.username, userAuth.password, user.id)
         val messages: MessagesList = withContext(Dispatchers.IO) {
           RetrofitClient.createMessageService().getUserMessages(userMessageRequest)
         }

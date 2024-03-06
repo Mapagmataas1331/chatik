@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.example.chatik.api.RetrofitClient
 import com.example.chatik.api.model.LoginRequest
 import com.example.chatik.api.model.Id
+import com.example.chatik.api.model.Auth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,7 +34,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun LoginScreen(
   context: Context,
-  onLoginSuccess: (Int) -> Unit,
+  onLoginSuccess: (Auth) -> Unit,
   onRegisterClicked: () -> Unit
 ) {
   var username by remember { mutableStateOf("") }
@@ -60,9 +61,9 @@ fun LoginScreen(
     Spacer(modifier = Modifier.height(16.dp))
     Button(onClick = {
       // Perform login logic here
-      loginUser(context, username, password) { userId: Int ->
-        if (userId >= 0) {
-          onLoginSuccess(userId)
+      loginUser(context, username, password) { userAuth: Auth ->
+        if (userAuth.id >= 0) {
+          onLoginSuccess(userAuth)
         } else {
           Toast.makeText(
             context,
@@ -81,7 +82,7 @@ fun LoginScreen(
   }
 }
 
-private fun loginUser(context: Context, username: String, password: String, callback: (Int) -> Unit) {
+private fun loginUser(context: Context, username: String, password: String, callback: (Auth) -> Unit) {
   val authService = RetrofitClient.createAuthService()
   CoroutineScope(Dispatchers.IO).launch {
     try {
@@ -89,23 +90,18 @@ private fun loginUser(context: Context, username: String, password: String, call
       val success = response.id >= 0
       withContext(Dispatchers.Main) {
         if (success) {
-          callback(response.id)
+          callback(Auth(response.id, username, password))
         } else {
-          callback(-1)
-          Toast.makeText(
-            context,
-            "Login failed. Please try again.",
-            Toast.LENGTH_SHORT
-          ).show()
+          callback(Auth(-1, username, password))
         }
       }
     } catch (e: Exception) {
       e.printStackTrace()
       withContext(Dispatchers.Main) {
-        callback(-1)
+        callback(Auth(-1, username, password))
         Toast.makeText(
           context,
-          "Login failed. Please try again.",
+          e.message,
           Toast.LENGTH_SHORT
         ).show()
       }

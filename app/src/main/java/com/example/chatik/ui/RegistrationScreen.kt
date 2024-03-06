@@ -110,11 +110,6 @@ private fun registerUser(context: Context, username: String, password: String, f
           callback(true)
         } else {
           callback(false)
-          Toast.makeText(
-            context,
-            "Login failed. Please try again.",
-            Toast.LENGTH_SHORT
-          ).show()
         }
       }
     } catch (e: Exception) {
@@ -123,7 +118,7 @@ private fun registerUser(context: Context, username: String, password: String, f
         callback(false)
         Toast.makeText(
           context,
-          "Login failed. Please try again.",
+          e.message,
           Toast.LENGTH_SHORT
         ).show()
       }

@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.example.chatik.api.RetrofitClient
+import com.example.chatik.api.model.Auth
 import com.example.chatik.api.model.Message
 import com.example.chatik.api.model.SendMessageRequest
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +36,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ChatScreen(
   friendUsername: String,
-  currentUserID: Int,
+  userAuth: Auth,
   onBackClicked: () -> Unit
 ) {
   var messageText by remember { mutableStateOf("") }
@@ -81,7 +82,7 @@ fun ChatScreen(
       ),
       keyboardActions = KeyboardActions(
         onSend = {
-          sendMessage(context, currentUserID, friendUsername, messageText) { success ->
+          sendMessage(context, userAuth, friendUsername, messageText) { success ->
             if (success) {
               messageText = ""
             } else {
@@ -100,7 +101,7 @@ fun ChatScreen(
 
 private fun sendMessage(
   context: Context,
-  currentUserID: Int,
+  userAuth: Auth,
   friendUsername: String,
   message: String,
   callback: (Boolean) -> Unit
@@ -108,7 +109,7 @@ private fun sendMessage(
   CoroutineScope(Dispatchers.IO).launch {
     try {
       val friendInfo = RetrofitClient.createUserService().getUserInfo(friendUsername)
-      val sendMessageRequest = SendMessageRequest(currentUserID, friendInfo.id, message)
+      val sendMessageRequest = SendMessageRequest(userAuth.username, userAuth.password, friendInfo.id, message)
       RetrofitClient.createMessageService().sendMessage(sendMessageRequest)
       withContext(Dispatchers.Main) {
         callback(true)
