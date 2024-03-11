@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +49,7 @@ fun ChatsScreen(
       onSearch = {},
       active = true,
       onActiveChange = {},
+      placeholder = { Text("Search...") },
       content = { LoadChats(context, chats, userAuth, searchText, onChatClicked) }
     )
   }
@@ -100,7 +102,12 @@ fun DisplayChats(
     ) {
       items(chats) { chat ->
         Column(modifier = Modifier.fillMaxWidth().clickable { onChatClicked(chat.split("#")[0]) }) {
-          Text(text = chat)
+          Text(
+            text = chat,
+            modifier = Modifier
+              .padding(vertical = 8.dp)
+              .padding(horizontal = 8.dp)
+          )
           HorizontalDivider(thickness = 1.dp, color = Color.Gray)
         }
       }
