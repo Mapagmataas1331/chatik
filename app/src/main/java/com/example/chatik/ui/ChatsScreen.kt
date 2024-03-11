@@ -2,6 +2,7 @@ package com.example.chatik.ui
 
 import android.content.Context
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,7 +27,7 @@ import com.example.chatik.api.model.Auth
 import com.example.chatik.api.model.MessagesList
 import com.example.chatik.api.model.SearchString
 import com.example.chatik.api.model.SearchUsers
-import com.example.chatik.api.model.UserMessageRequest
+import com.example.chatik.api.model.UserMessagesRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -68,9 +69,9 @@ fun LoadChats(
       }
       chats.clear()
       for (user in response.searchUsers) {
-        val userMessageRequest = UserMessageRequest(userAuth.username, userAuth.password, user.id)
+        val userMessagesRequest = UserMessagesRequest(userAuth.username, userAuth.password, user.id)
         val messages: MessagesList = withContext(Dispatchers.IO) {
-          RetrofitClient.createMessageService().getUserMessages(userMessageRequest)
+          RetrofitClient.createMessageService().getUserMessages(userMessagesRequest)
         }
         val chatText = if (messages.messagesList.isNotEmpty()) {
           val lastMessage = messages.messagesList.last()
@@ -93,11 +94,15 @@ fun DisplayChats(
   chats: List<String>,
   onChatClicked: (String) -> Unit
 ) {
-  LazyColumn {
-    items(chats) { chat ->
-      Column(modifier = Modifier.fillMaxWidth().clickable { onChatClicked(chat.split("#")[0]) }) {
-        Text(text = chat)
-        HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+  Column(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(
+      modifier = Modifier.weight(1f)
+    ) {
+      items(chats) { chat ->
+        Column(modifier = Modifier.fillMaxWidth().clickable { onChatClicked(chat.split("#")[0]) }) {
+          Text(text = chat)
+          HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+        }
       }
     }
   }
