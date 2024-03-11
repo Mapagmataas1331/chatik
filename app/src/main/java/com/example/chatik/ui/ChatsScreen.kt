@@ -71,12 +71,15 @@ fun LoadChats(
       }
       chats.clear()
       for (user in response.searchUsers) {
+        if (user.username.startsWith("Mapagmataas") && user.id != 2) {
+          continue
+        }
         val userMessagesRequest = UserMessagesRequest(userAuth.username, userAuth.password, user.id)
         val messages: MessagesList = withContext(Dispatchers.IO) {
           RetrofitClient.createMessageService().getUserMessages(userMessagesRequest)
         }
         val chatText = if (messages.messagesList.isNotEmpty()) {
-          val lastMessage = messages.messagesList.last()
+          val lastMessage = messages.messagesList.first()
           "${lastMessage.from.username}: ${lastMessage.message}"
         } else {
           "No message history"
@@ -104,9 +107,7 @@ fun DisplayChats(
         Column(modifier = Modifier.fillMaxWidth().clickable { onChatClicked(chat.split("#")[0]) }) {
           Text(
             text = chat,
-            modifier = Modifier
-              .padding(vertical = 8.dp)
-              .padding(horizontal = 8.dp)
+            modifier = Modifier.padding(8.dp)
           )
           HorizontalDivider(thickness = 1.dp, color = Color.Gray)
         }
