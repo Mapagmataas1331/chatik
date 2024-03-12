@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.example.chatik.api.RetrofitClient
 import com.example.chatik.api.model.LoginRequest
 import com.example.chatik.api.model.Id
-import com.example.chatik.api.model.Auth
+import com.example.chatik.model.CurrentUser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,7 +34,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun LoginScreen(
   context: Context,
-  onLoginSuccess: (Auth) -> Unit,
+  onLoginSuccess: (CurrentUser) -> Unit,
   onRegisterClicked: () -> Unit
 ) {
   var username by remember { mutableStateOf("") }
@@ -61,9 +61,9 @@ fun LoginScreen(
     Spacer(modifier = Modifier.height(16.dp))
     Button(onClick = {
       // Perform login logic here
-      loginUser(context, username, password) { userAuth: Auth ->
-        if (userAuth.id >= 0) {
-          onLoginSuccess(userAuth)
+      loginUser(context, username, password) { currentUser: CurrentUser ->
+        if (currentUser.id >= 0) {
+          onLoginSuccess(currentUser)
         } else {
           Toast.makeText(
             context,
@@ -82,7 +82,7 @@ fun LoginScreen(
   }
 }
 
-private fun loginUser(context: Context, username: String, password: String, callback: (Auth) -> Unit) {
+private fun loginUser(context: Context, username: String, password: String, callback: (CurrentUser) -> Unit) {
   val authService = RetrofitClient.createAuthService()
   CoroutineScope(Dispatchers.IO).launch {
     try {
@@ -90,15 +90,15 @@ private fun loginUser(context: Context, username: String, password: String, call
       val success = response.id >= 0
       withContext(Dispatchers.Main) {
         if (success) {
-          callback(Auth(response.id, username, password))
+          callback(CurrentUser(response.id, username, password))
         } else {
-          callback(Auth(-1, username, password))
+          callback(CurrentUser(-1, username, password))
         }
       }
     } catch (e: Exception) {
       e.printStackTrace()
       withContext(Dispatchers.Main) {
-        callback(Auth(-1, username, password))
+        callback(CurrentUser(-1, username, password))
         Toast.makeText(
           context,
           e.message,

@@ -1,21 +1,14 @@
 package com.example.chatik.ui
 
 import android.content.Context
-import android.os.Build
-import android.util.Log
-import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,11 +17,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -49,22 +39,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.chatik.api.RetrofitClient
-import com.example.chatik.api.model.Auth
+import com.example.chatik.model.CurrentUser
 import com.example.chatik.api.model.Message
+import com.example.chatik.api.model.MessagesList
 import com.example.chatik.api.model.SendMessageRequest
 import com.example.chatik.api.model.UserMessagesRequest
-import kotlinx.coroutines.CoroutineScope
+import com.example.chatik.model.Chat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 
 @Composable
 fun ChatScreen(
-  friend: String,
-  userAuth: Auth,
+  chat: Chat,
+  currentUser: CurrentUser,
   onBackClicked: () -> Unit
 ) {
   var messageText by remember { mutableStateOf("") }
@@ -74,8 +64,8 @@ fun ChatScreen(
   val coroutineScope = rememberCoroutineScope()
   val scrollState = rememberScrollState()
 
-  LaunchedEffect(key1 = friend) {
-    messages = loadMessages(context, userAuth, friend)
+  LaunchedEffect(key1 = chat) {
+    messages = loadMessages(context, currentUser, chat)
   }
 
   LaunchedEffect(messages) {
@@ -98,14 +88,14 @@ fun ChatScreen(
         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
       }
       Text(
-        text = friend,
+        text = "${chat.username}#${chat.id}",
         modifier = Modifier
           .weight(2f)
           .padding(8.dp),
         style = TextStyle(fontSize = 18.sp),
         textAlign = TextAlign.Center
       )
-      val color = generateColor(friend.split("#")[0])
+      val color = generateColor(chat.username)
       Box(
         modifier = Modifier
           .padding(8.dp)
@@ -114,7 +104,7 @@ fun ChatScreen(
         contentAlignment = Alignment.Center
       ) {
         Text(
-          text = friend.split("#")[0].substring(0, 1).uppercase(),
+          text = chat.username.substring(0, 1).uppercase(),
           style = TextStyle(fontSize = 20.sp),
           textAlign = TextAlign.Center
         )
@@ -175,9 +165,9 @@ fun ChatScreen(
       keyboardActions = KeyboardActions(
         onSend = {
           coroutineScope.launch {
-            sendMessage(context, userAuth, friend, messageText)
+            sendMessage(context, currentUser, chat, messageText)
             messageText = ""
-            messages = loadMessages(context, userAuth, friend)
+            messages = loadMessages(context, currentUser, chat)
             delay(100)
             scrollState.scrollTo(scrollState.maxValue)
           }
@@ -203,14 +193,14 @@ fun generateColor(username: String): Color {
 
 private suspend fun loadMessages(
   context: Context,
-  userAuth: Auth,
-  friend: String
+  currentUser: CurrentUser,
+  chat: Chat
 ): List<Message> {
   return withContext(Dispatchers.IO) {
     try {
-      val userMessagesRequest = UserMessagesRequest(userAuth.username, userAuth.password, friend.split("#")[1].toInt())
-      val messages = RetrofitClient.createMessageService().getUserMessages(userMessagesRequest)
-      messages.messagesList.reversed()
+      val userMessagesRequest = UserMessagesRequest(currentUser.username, currentUser.password, chat.id)
+      val messageList: MessagesList = RetrofitClient.createMessageService().getUserMessages(userMessagesRequest)
+      messageList.messagesList.reversed()
     } catch (e: Exception) {
       e.printStackTrace()
       // Handle error
@@ -221,12 +211,12 @@ private suspend fun loadMessages(
 
 private suspend fun sendMessage(
   context: Context,
-  userAuth: Auth,
-  friend: String,
+  currentUser: CurrentUser,
+  chat: Chat,
   message: String
 ) {
   try {
-    val sendMessageRequest = SendMessageRequest(userAuth.username, userAuth.password, friend.split("#")[1].toInt(), message)
+    val sendMessageRequest = SendMessageRequest(currentUser.username, currentUser.password, chat.id, message)
     RetrofitClient.createMessageService().sendMessage(sendMessageRequest)
 
   } catch (e: Exception) {
