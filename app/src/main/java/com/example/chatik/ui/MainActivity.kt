@@ -21,15 +21,15 @@ class MainActivity : ComponentActivity() {
 fun ChatikApp(context: Context) {
   var currentScreen by rememberSaveable { mutableStateOf(Screen.Login) }
   var currentUserAuth by remember { mutableStateOf(Auth(id = -1, username = "", password = "")) }
-  var currentFriendUsername by remember { mutableStateOf("") }
+  var currentFriend by remember { mutableStateOf("") }
 
   val onLoginSuccess: (Auth) -> Unit = { userAuth ->
     currentUserAuth = userAuth
     currentScreen = Screen.Chats
   }
 
-  val onChatClicked: (String) -> Unit = { friendUsername ->
-    currentFriendUsername = friendUsername
+  val onChatClicked: (String) -> Unit = { friend ->
+    currentFriend = friend
     currentScreen = Screen.Chat
   }
 
@@ -55,7 +55,7 @@ fun ChatikApp(context: Context) {
     )
 
     Screen.Chat -> ChatScreen(
-      friendUsername = currentFriendUsername,
+      friend = currentFriend,
       userAuth = currentUserAuth,
       onBackClicked = {
         currentScreen = Screen.Chats

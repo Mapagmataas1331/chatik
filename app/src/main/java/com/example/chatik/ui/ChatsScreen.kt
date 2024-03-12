@@ -104,7 +104,7 @@ fun DisplayChats(
       modifier = Modifier.weight(1f)
     ) {
       items(chats) { chat ->
-        Column(modifier = Modifier.fillMaxWidth().clickable { onChatClicked(chat.split("#")[0]) }) {
+        Column(modifier = Modifier.fillMaxWidth().clickable { onChatClicked(chat.split("\n")[0]) }) {
           Text(
             text = chat,
             modifier = Modifier.padding(8.dp)
