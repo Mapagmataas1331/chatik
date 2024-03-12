@@ -34,6 +34,11 @@ fun ChatikApp(context: Context) {
     currentScreen = Screen.Chat
   }
 
+  val onLogoutClicked: () -> Unit = {
+    currentUser = CurrentUser(id = -1, username = "", password = "")
+    currentScreen = Screen.Login
+  }
+
   when (currentScreen) {
     Screen.Login -> LoginScreen(
       context = context,
@@ -52,7 +57,8 @@ fun ChatikApp(context: Context) {
     Screen.Chats -> ChatsScreen(
       context = context,
       currentUser = currentUser,
-      onChatClicked = onChatClicked
+      onChatClicked = onChatClicked,
+      onLogoutClicked = onLogoutClicked
     )
 
     Screen.Chat -> ChatScreen(

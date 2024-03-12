@@ -13,8 +13,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +34,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.example.chatik.api.RetrofitClient
 import com.example.chatik.api.model.MessagesList
 import com.example.chatik.api.model.SearchString
@@ -45,28 +50,42 @@ import kotlinx.coroutines.withContext
 fun ChatsScreen(
   context: Context,
   currentUser: CurrentUser,
-  onChatClicked: (Chat) -> Unit
+  onChatClicked: (Chat) -> Unit,
+  onLogoutClicked: () -> Unit
 ) {
   var allChats by remember { mutableStateOf<List<Chat>>(emptyList()) }
   var searchText by remember { mutableStateOf("") }
 
   Column(modifier = Modifier.fillMaxSize()) {
-    SearchBar(
-      query = searchText,
-      onQueryChange = { searchText = it },
-      onSearch = {},
-      active = true,
-      onActiveChange = {},
-      placeholder = { Text("Search...") },
-      content = { LoadChats(
-        context,
-        currentUser,
-        searchText,
-        onChatClicked,
-        allChats,
-        setAllChats = { allChats = it.toList() }
-      ) }
-    )
+    Box(modifier = Modifier.fillMaxWidth()) {
+      SearchBar(
+        query = searchText,
+        onQueryChange = { searchText = it },
+        onSearch = {},
+        active = true,
+        onActiveChange = {},
+        placeholder = { Text("Search...") },
+        content = {
+          LoadChats(
+            context,
+            currentUser,
+            searchText,
+            onChatClicked,
+            allChats,
+            setAllChats = { allChats = it.toList() }
+          )
+        }
+      )
+      IconButton(
+        onClick = { onLogoutClicked() },
+        modifier = Modifier
+          .align(Alignment.TopEnd)
+          .padding(14.dp)
+          .zIndex(2f)
+      ) {
+        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")
+      }
+    }
   }
 }
 
