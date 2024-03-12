@@ -81,7 +81,7 @@ fun LoadChats(
       }
       chats.clear()
       for (user in response.searchUsers) {
-        if (user.username.startsWith("Mapagmataas") && user.id != 2) {
+        if (user.id in 3..100) {
           continue
         }
         val userMessagesRequest = UserMessagesRequest(currentUser.username, currentUser.password, user.id)
