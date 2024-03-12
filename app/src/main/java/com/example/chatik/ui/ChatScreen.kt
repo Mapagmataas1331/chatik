@@ -78,7 +78,7 @@ fun ChatScreen(
     messages = if (chat.messages.isNullOrEmpty()) {
       loadMessages(context, currentUser, chat)
     } else {
-      chat.messages
+      chat.messages.reversed()
     }
   }
 
