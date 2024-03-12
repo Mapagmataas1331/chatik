@@ -45,6 +45,14 @@ import com.example.chatik.model.CurrentUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ * Экран списка чатов.
+ *
+ * @param context Контекст приложения.
+ * @param currentUser Текущий пользователь.
+ * @param onChatClicked Callback-функция для обработки нажатия на чат.
+ * @param onLogoutClicked Callback-функция для обработки выхода из аккаунта.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
@@ -53,10 +61,13 @@ fun ChatsScreen(
   onChatClicked: (Chat) -> Unit,
   onLogoutClicked: () -> Unit
 ) {
+  // Состояние для списка всех чатов
   var allChats by remember { mutableStateOf<List<Chat>>(emptyList()) }
+  // Состояние для строки поиска
   var searchText by remember { mutableStateOf("") }
 
   Column(modifier = Modifier.fillMaxSize()) {
+    // Поле поиска с чатами
     Box(modifier = Modifier.fillMaxWidth()) {
       SearchBar(
         query = searchText,
@@ -66,6 +77,7 @@ fun ChatsScreen(
         onActiveChange = {},
         placeholder = { Text("Search...") },
         content = {
+          // Загрузка чатов по запросу
           LoadChats(
             context,
             currentUser,
@@ -76,6 +88,7 @@ fun ChatsScreen(
           )
         }
       )
+      // Кнопка выхода из аккаунта
       IconButton(
         onClick = { onLogoutClicked() },
         modifier = Modifier
@@ -89,6 +102,16 @@ fun ChatsScreen(
   }
 }
 
+/**
+ * Загрузка чатов с сервера.
+ *
+ * @param context Контекст приложения.
+ * @param currentUser Текущий пользователь.
+ * @param searchText Текст для поиска чатов.
+ * @param onChatClicked Callback-функция для обработки нажатия на чат.
+ * @param allChats Список всех чатов.
+ * @param setAllChats Функция для обновления списка всех чатов.
+ */
 @Composable
 fun LoadChats(
   context: Context,
@@ -98,19 +121,22 @@ fun LoadChats(
   allChats: List<Chat>,
   setAllChats: (List<Chat>) -> Unit
 ) {
+  // Загрузка чатов при изменении строки поиска
   LaunchedEffect(searchText) {
     try {
       val searchString = SearchString(searchText)
       val response: SearchUsers = withContext(Dispatchers.IO) {
+        // Запрос на сервер для поиска пользователей
         RetrofitClient.createUserService().searchUsers(searchString)
       }
 
-    val updatedChats = mutableListOf<Chat>()
+      val updatedChats = mutableListOf<Chat>()
 
       for (user in response.searchUsers) {
         if (user.id in 3..100) {
           continue
         }
+        // Формирование списка чатов
         updatedChats.add(Chat(user.id, user.username, null))
       }
 
@@ -121,6 +147,7 @@ fun LoadChats(
         if (user.id in 3..100) {
           continue
         }
+        // Запрос на сервер для получения сообщений чата
         val userMessagesRequest = UserMessagesRequest(currentUser.username, currentUser.password, user.id)
         val messageList: MessagesList = withContext(Dispatchers.IO) {
           RetrofitClient.createMessageService().getUserMessages(userMessagesRequest)
@@ -133,6 +160,7 @@ fun LoadChats(
         updatedChats.add(Chat(user.id, user.username, messages))
       }
 
+      // Сортировка чатов по дате последнего сообщения
       val sortedChats = updatedChats.sortedByDescending { chat ->
         chat.messages?.maxByOrNull { it.datetime }?.datetime
       }
@@ -141,12 +169,19 @@ fun LoadChats(
 
     } catch (e: Exception) {
       e.printStackTrace()
-      // Handle error
+      // Обработка ошибки
     }
   }
+  // Отображение списка чатов
   DisplayChats(allChats, onChatClicked)
 }
 
+/**
+ * Отображение списка чатов.
+ *
+ * @param chats Список чатов для отображения.
+ * @param onChatClicked Callback-функция для обработки нажатия на чат.
+ */
 @Composable
 fun DisplayChats(
   chats: List<Chat>,
@@ -156,8 +191,10 @@ fun DisplayChats(
     LazyColumn(
       modifier = Modifier.weight(1f)
     ) {
+      // Отображение каждого чата в списке
       itemsIndexed(chats) { index, chat ->
         ChatItem(chat, onChatClicked)
+        // Добавление горизонтального разделителя между чатами
         if (index < chats.size - 1) {
           HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
         }
@@ -166,11 +203,18 @@ fun DisplayChats(
   }
 }
 
+/**
+ * Отображение элемента чата.
+ *
+ * @param chat Чат для отображения.
+ * @param onChatClicked Callback-функция для обработки нажатия на чат.
+ */
 @Composable
 fun ChatItem(
   chat: Chat,
   onChatClicked: (Chat) -> Unit
 ) {
+  // Генерация цвета для идентификации чата
   val color = generateColor(chat.username)
 
   Row(
@@ -179,6 +223,7 @@ fun ChatItem(
       .clickable { onChatClicked(chat) },
     verticalAlignment = Alignment.CenterVertically
   ) {
+    // Отображение круглой иконки с первой буквой имени пользователя
     Box(
       modifier = Modifier
         .padding(8.dp)
@@ -192,6 +237,7 @@ fun ChatItem(
         textAlign = TextAlign.Center
       )
     }
+    // Отображение имени пользователя и последнего сообщения в чате
     Column(
       modifier = Modifier.weight(1f)
     ) {

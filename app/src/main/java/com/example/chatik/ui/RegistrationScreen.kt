@@ -30,27 +30,37 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * Экран регистрации нового пользователя.
+ *
+ * @param context Контекст приложения.
+ * @param onLoginClicked Callback-функция для перехода к экрану входа.
+ */
 @Composable
 fun RegistrationScreen(
   context: Context,
   onLoginClicked: () -> Unit
 ) {
+  // Состояния для полей ввода
   var username by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
   var firstName by remember { mutableStateOf("") }
   var lastName by remember { mutableStateOf("") }
 
+  // Колонка с компонентами интерфейса
   Column(
     modifier = Modifier.fillMaxSize(),
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
+    // Поле ввода имени пользователя
     TextField(
       value = username,
       onValueChange = { username = it },
       label = { Text("Username") }
     )
     Spacer(modifier = Modifier.height(16.dp))
+    // Поле ввода пароля
     TextField(
       value = password,
       onValueChange = { password = it },
@@ -59,22 +69,26 @@ fun RegistrationScreen(
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
     )
     Spacer(modifier = Modifier.height(16.dp))
+    // Поле ввода имени
     TextField(
       value = firstName,
       onValueChange = { firstName = it },
       label = { Text("First Name") }
     )
     Spacer(modifier = Modifier.height(16.dp))
+    // Поле ввода фамилии
     TextField(
       value = lastName,
       onValueChange = { lastName = it },
       label = { Text("Last Name") }
     )
     Spacer(modifier = Modifier.height(16.dp))
+    // Кнопка регистрации
     Button(onClick = {
-      // Perform registration logic here
+      // Выполнение логики регистрации
       registerUser(context, username, password, firstName, lastName) { success ->
         if (success) {
+          // Показ уведомления об успешной регистрации и переход к экрану входа
           Toast.makeText(
             context,
             "Registration successful.",
@@ -82,6 +96,7 @@ fun RegistrationScreen(
           ).show()
           onLoginClicked()
         } else {
+          // Показ уведомления о неудачной регистрации
           Toast.makeText(
             context,
             "Registration failed. Please try again.",
@@ -93,12 +108,23 @@ fun RegistrationScreen(
       Text("Register")
     }
     Spacer(modifier = Modifier.height(16.dp))
+    // Кнопка для перехода к экрану входа
     TextButton(onClick = onLoginClicked) {
       Text("Login")
     }
   }
 }
 
+/**
+ * Функция для регистрации нового пользователя.
+ *
+ * @param context Контекст приложения.
+ * @param username Имя пользователя.
+ * @param password Пароль пользователя.
+ * @param firstName Имя пользователя.
+ * @param lastName Фамилия пользователя.
+ * @param callback Функция обратного вызова для обработки результатов регистрации.
+ */
 private fun registerUser(context: Context, username: String, password: String, firstName: String, lastName: String, callback: (Boolean) -> Unit) {
   val authService = RetrofitClient.createAuthService()
   CoroutineScope(Dispatchers.IO).launch {
@@ -106,15 +132,13 @@ private fun registerUser(context: Context, username: String, password: String, f
       val response: Id = authService.registerUser(RegistrationRequest(username, password, firstName, lastName))
       val success = response.id >= 0
       withContext(Dispatchers.Main) {
-        if (success) {
-          callback(true)
-        } else {
-          callback(false)
-        }
+        // Уведомляем о результате регистрации через коллбэк
+        callback(success)
       }
     } catch (e: Exception) {
       e.printStackTrace()
       withContext(Dispatchers.Main) {
+        // Уведомляем о возникшей ошибке и неудачной регистрации
         callback(false)
         Toast.makeText(
           context,

@@ -31,12 +31,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * Экран входа в приложение.
+ *
+ * @param context Контекст приложения.
+ * @param onLoginSuccess Callback-функция для обработки успешного входа в приложение.
+ * @param onRegisterClicked Callback-функция для перехода на экран регистрации.
+ */
 @Composable
 fun LoginScreen(
   context: Context,
   onLoginSuccess: (CurrentUser) -> Unit,
   onRegisterClicked: () -> Unit
 ) {
+  // Состояния для имени пользователя и пароля
   var username by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
 
@@ -45,12 +53,14 @@ fun LoginScreen(
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
+    // Поле ввода имени пользователя
     TextField(
       value = username,
       onValueChange = { username = it },
       label = { Text("Username") }
     )
     Spacer(modifier = Modifier.height(16.dp))
+    // Поле ввода пароля
     TextField(
       value = password,
       onValueChange = { password = it },
@@ -59,12 +69,15 @@ fun LoginScreen(
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
     )
     Spacer(modifier = Modifier.height(16.dp))
+    // Кнопка для входа
     Button(onClick = {
-      // Perform login logic here
+      // Выполнение логики входа
       loginUser(context, username, password) { currentUser: CurrentUser ->
         if (currentUser.id >= 0) {
+          // В случае успешного входа вызываем соответствующий коллбэк
           onLoginSuccess(currentUser)
         } else {
+          // В случае неудачного входа показываем сообщение об ошибке
           Toast.makeText(
             context,
             "Login failed. Please try again.",
@@ -76,18 +89,29 @@ fun LoginScreen(
       Text("Login")
     }
     Spacer(modifier = Modifier.height(16.dp))
+    // Кнопка для перехода на экран регистрации
     TextButton(onClick = onRegisterClicked) {
       Text("Register")
     }
   }
 }
 
+/**
+ * Функция для выполнения запроса на вход пользователя.
+ *
+ * @param context Контекст приложения.
+ * @param username Имя пользователя.
+ * @param password Пароль пользователя.
+ * @param callback Callback-функция для обработки результата входа.
+ */
 private fun loginUser(context: Context, username: String, password: String, callback: (CurrentUser) -> Unit) {
   val authService = RetrofitClient.createAuthService()
+  // Запуск корутины для выполнения запроса на вход
   CoroutineScope(Dispatchers.IO).launch {
     try {
       val response: Id = authService.loginUser(LoginRequest(username, password))
       val success = response.id >= 0
+      // Возврат результата в основной поток
       withContext(Dispatchers.Main) {
         if (success) {
           callback(CurrentUser(response.id, username, password))
@@ -97,6 +121,7 @@ private fun loginUser(context: Context, username: String, password: String, call
       }
     } catch (e: Exception) {
       e.printStackTrace()
+      // Обработка ошибки и показ сообщения об ошибке в основном потоке
       withContext(Dispatchers.Main) {
         callback(CurrentUser(-1, username, password))
         Toast.makeText(
