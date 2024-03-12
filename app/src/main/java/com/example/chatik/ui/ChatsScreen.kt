@@ -154,7 +154,7 @@ fun ChatItem(
       modifier = Modifier.weight(1f)
     ) {
       Text(
-        text = "${chat.username}#${chat.id}",
+        text = chat.username,
         modifier = Modifier.padding(8.dp)
       )
       chat.messages?.firstOrNull()?.let { firstMessage ->
