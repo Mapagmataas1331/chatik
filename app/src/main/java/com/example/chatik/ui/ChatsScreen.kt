@@ -20,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,7 +31,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.chatik.api.RetrofitClient
-import com.example.chatik.api.model.Message
 import com.example.chatik.api.model.MessagesList
 import com.example.chatik.api.model.SearchString
 import com.example.chatik.api.model.SearchUsers
@@ -49,7 +47,7 @@ fun ChatsScreen(
   currentUser: CurrentUser,
   onChatClicked: (Chat) -> Unit
 ) {
-  val chats = remember { mutableStateListOf<Chat>() }
+  var allChats by remember { mutableStateOf<List<Chat>>(emptyList()) }
   var searchText by remember { mutableStateOf("") }
 
   Column(modifier = Modifier.fillMaxSize()) {
@@ -60,7 +58,14 @@ fun ChatsScreen(
       active = true,
       onActiveChange = {},
       placeholder = { Text("Search...") },
-      content = { LoadChats(context, chats, currentUser, searchText, onChatClicked) }
+      content = { LoadChats(
+        context,
+        currentUser,
+        searchText,
+        onChatClicked,
+        allChats,
+        setAllChats = { allChats = it.toList() }
+      ) }
     )
   }
 }
@@ -68,10 +73,11 @@ fun ChatsScreen(
 @Composable
 fun LoadChats(
   context: Context,
-  chats: MutableList<Chat>,
   currentUser: CurrentUser,
   searchText: String,
-  onChatClicked: (Chat) -> Unit
+  onChatClicked: (Chat) -> Unit,
+  allChats: List<Chat>,
+  setAllChats: (List<Chat>) -> Unit
 ) {
   LaunchedEffect(searchText) {
     try {
@@ -79,7 +85,19 @@ fun LoadChats(
       val response: SearchUsers = withContext(Dispatchers.IO) {
         RetrofitClient.createUserService().searchUsers(searchString)
       }
-      chats.clear()
+
+    val updatedChats = mutableListOf<Chat>()
+
+      for (user in response.searchUsers) {
+        if (user.id in 3..100) {
+          continue
+        }
+        updatedChats.add(Chat(user.id, user.username, null))
+      }
+
+      setAllChats(updatedChats)
+      updatedChats.clear()
+
       for (user in response.searchUsers) {
         if (user.id in 3..100) {
           continue
@@ -89,20 +107,25 @@ fun LoadChats(
           RetrofitClient.createMessageService().getUserMessages(userMessagesRequest)
         }
 
-        val messages = if (messageList.messagesList.isEmpty()) {
+        val messages = messageList.messagesList.ifEmpty {
           null
-        } else {
-          messageList.messagesList
         }
 
-        chats.add(Chat(user.id, user.username, messages))
+        updatedChats.add(Chat(user.id, user.username, messages))
       }
+
+      val sortedChats = updatedChats.sortedByDescending { chat ->
+        chat.messages?.maxByOrNull { it.datetime }?.datetime
+      }
+
+      setAllChats(sortedChats)
+
     } catch (e: Exception) {
       e.printStackTrace()
       // Handle error
     }
   }
-  DisplayChats(chats, onChatClicked)
+  DisplayChats(allChats, onChatClicked)
 }
 
 @Composable

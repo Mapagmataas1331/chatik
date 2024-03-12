@@ -65,7 +65,11 @@ fun ChatScreen(
   val scrollState = rememberScrollState()
 
   LaunchedEffect(key1 = chat) {
-    messages = loadMessages(context, currentUser, chat)
+    messages = if (chat.messages.isNullOrEmpty()) {
+      loadMessages(context, currentUser, chat)
+    } else {
+      chat.messages
+    }
   }
 
   LaunchedEffect(messages) {
